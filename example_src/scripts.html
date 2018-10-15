@@ -1,0 +1,72 @@
+<script src="example_files/d3.js"></script>
+<script src="example_files/BrAPI.js"></script>
+<script src="example_files/BrAPIBoxPlotter.js"></script>
+<script type="text/javascript">
+  var boxplot;
+  d3.select("#searchParams-submit").on("click",function(){
+    var searchParams = {};
+    d3.select("#searchParams").selectAll("[name]").each(function(){
+      if(this.value){
+       searchParams[this.name] = this.value
+        .split(/,/g)
+        .map(id=>id.replace(/^\s+|\s+$/g, ''));
+      } 
+    })
+    searchParams.pageSize = 1000;
+    boxplot = BrAPIBoxPlotter(
+      BrAPI(
+        "https://cassavabase.org/brapi/v1",
+        "v1.2", null, 5
+      ).phenotypes_search(searchParams),
+      "#bxplt"
+    );
+    d3.select("#groupBys").attr("hidden",null);
+    drawGroupBys();
+    drawVariableSelect();
+  });
+  
+  function drawVariableSelect(){
+    boxplot.getVariables().then(vs=>{
+      var vars = d3.select("#variableSelect").selectAll("option").data(vs);
+      vars.exit().remove();
+      var allVars = vars.enter().append("option")
+        .merge(vars)
+        .attr("value",d=>d.key)
+        .text(d=>d.value);
+    });
+    d3.select("#variableSelect").on("change",function(){
+      boxplot.setVariable(this.value);
+    })
+  }
+  
+  function drawGroupBys(){
+    boxplot.getGroupings().then(grps=>{
+      var optSelects = d3.select("#groupBys")
+        .selectAll(".groupBy")
+        .on("change",function(){
+          readGrouping();
+        })
+        .selectAll('option:not([value=""])')
+        .data(d=>grps);
+      optSelects.enter().append("option")
+        .merge(optSelects)
+        .attr("value",d=>d.key)
+        .text(d=>d.value.name);
+      d3.selectAll(".groupBy-add").on("click",function(){
+        d3.select(this.parentNode).clone(true);
+        drawGroupBys();
+        readGrouping();
+      });
+      d3.selectAll(".groupBy-remove").on("click",function(){
+        d3.select(this.parentNode).remove();
+        readGrouping();
+      });
+    });
+  }
+  function readGrouping(){
+    var grouping = [];
+    d3.selectAll(".groupBy")
+      .each(function(){grouping.push(this.value)})
+    boxplot.setGroupings(grouping)
+  }
+</script>

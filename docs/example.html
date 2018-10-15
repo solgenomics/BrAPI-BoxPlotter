@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>
+      BrAPI Phenotype BoxPlotter
+    </title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  </head>
+  <body style="padding:2em;">
+    <h1>
+      BrAPI Phenotype BoxPlotter
+    </h1>
+    <div class="forward-container">
+      <style media="screen">
+.groupBy-div:only-child .groupBy-remove{
+      display: none;
+      }
+      .boxplot .infotext{
+      opacity: 0;
+      }
+      .boxplot:hover .infotext{
+      opacity: 1;
+      }
+      </style>
+      <div class="container-fluid">
+        <form id="searchParams" class="form-inline row" style="padding:10px;" name="searchParams">
+          <div class="form-group col-sm-2">
+            <label for="endpoint">germplasmDbIds</label> <input type="text" class="form-control" name="germplasmDbIds" value="">
+          </div>
+          <div class="form-group col-sm-2">
+            <label for="endpoint">observationVariableDbIds</label> <input type="text" class="form-control" name="observationVariableDbIds" value="">
+          </div>
+          <div class="form-group col-sm-2">
+            <label for="endpoint">studyDbIds</label> <input type="text" class="form-control" name="studyDbIds" value="313, 361, 312, 357">
+          </div>
+          <div class="form-group col-sm-2">
+            <label for="endpoint">locationDbIds</label> <input type="text" class="form-control" name="locationDbIds" value="">
+          </div>
+          <div class="form-group col-sm-2">
+            <label for="endpoint">trialDbIds</label> <input type="text" class="form-control" name="trialDbIds" value="">
+          </div>
+          <div class="form-group col-sm-2">
+            <label for="endpoint">programDbIds</label> <input type="text" class="form-control" name="programDbIds" value="">
+          </div>
+          <div class="form-group col-sm-2">
+            <label for="endpoint">seasonDbIds</label> <input type="text" class="form-control" name="seasonDbIds" value="">
+          </div>
+          <div class="col-sm-12">
+            <a id="searchParams-submit" class="btn btn-default">Get Values</a>
+          </div>
+        </form>
+        <div class="row">
+          <div class="groupBy-div form-inline col-sm-12 form-group">
+            <label for="sort" class="control-label">Variable</label> <select id="variableSelect" class="form-control">
+              </select>
+          </div>
+        </div>
+        <div id="groupBys" hidden="" class="row">
+          <div class="groupBy-div form-inline col-sm-12 form-group">
+            <label for="sort" class="control-label">Display By</label> <select class="form-control groupBy">
+              <option value="" selected>
+                </option>
+            </select> <a class="btn btn-default groupBy-add">+</a> <a class="btn btn-default groupBy-remove">-</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="brapp-container" style="position:relative;">
+      <div value="brapp-wrapper" style="display:inline-block; border:solid 1px #ccc;border-radius:4px;">
+        <div class="brapp-body" style="background-color:#fff;border-top-left-radius:4px;border-top-right-radius:4px;">
+          <div id="bxplt" style="width: 960px;"></div>
+          <div style="clear:both"></div>
+        </div>
+        <div class="brapp-footer" style="background-color:#ddd;border-top:solid 1px #ccc;font-family:Arial;color:#555;font-size:11px;padding:0.3em;border-bottom-left-radius:4px;border-bottom-right-radius:4px;">
+          <div style="min-height:14px;text-align:right;">
+            <a href="https://github.com/solgenomics/BrAPI-BoxPlotter" style="color:inherit;white-space:nowrap;text-decoration:underline;">Phenotype BoxPlotter</a> developed at the <a href="https://btiscience.org/" style="color:inherit;white-space:nowrap;text-decoration:underline;">Boyce Thompson Institute</a>
+          </div>
+        </div>
+      </div>
+    </div><script src="example_files/d3.js">
+</script> <script src="example_files/BrAPI.js">
+</script> <script src="example_files/BrAPIBoxPlotter.js">
+</script> <script type="text/javascript">
+var boxplot;
+    d3.select("#searchParams-submit").on("click",function(){
+    var searchParams = {};
+    d3.select("#searchParams").selectAll("[name]").each(function(){
+      if(this.value){
+       searchParams[this.name] = this.value
+        .split(/,/g)
+        .map(id=>id.replace(/^\s+|\s+$/g, ''));
+      } 
+    })
+    searchParams.pageSize = 1000;
+    boxplot = BrAPIBoxPlotter(
+      BrAPI(
+        "https://cassavabase.org/brapi/v1",
+        "v1.2", null, 5
+      ).phenotypes_search(searchParams),
+      "#bxplt"
+    );
+    d3.select("#groupBys").attr("hidden",null);
+    drawGroupBys();
+    drawVariableSelect();
+    });
+
+    function drawVariableSelect(){
+    boxplot.getVariables().then(vs=>{
+      var vars = d3.select("#variableSelect").selectAll("option").data(vs);
+      vars.exit().remove();
+      var allVars = vars.enter().append("option")
+        .merge(vars)
+        .attr("value",d=>d.key)
+        .text(d=>d.value);
+    });
+    d3.select("#variableSelect").on("change",function(){
+      boxplot.setVariable(this.value);
+    })
+    }
+
+    function drawGroupBys(){
+    boxplot.getGroupings().then(grps=>{
+      var optSelects = d3.select("#groupBys")
+        .selectAll(".groupBy")
+        .on("change",function(){
+          readGrouping();
+        })
+        .selectAll('option:not([value=""])')
+        .data(d=>grps);
+      optSelects.enter().append("option")
+        .merge(optSelects)
+        .attr("value",d=>d.key)
+        .text(d=>d.value.name);
+      d3.selectAll(".groupBy-add").on("click",function(){
+        d3.select(this.parentNode).clone(true);
+        drawGroupBys();
+        readGrouping();
+      });
+      d3.selectAll(".groupBy-remove").on("click",function(){
+        d3.select(this.parentNode).remove();
+        readGrouping();
+      });
+    });
+    }
+    function readGrouping(){
+    var grouping = [];
+    d3.selectAll(".groupBy")
+      .each(function(){grouping.push(this.value)})
+    boxplot.setGroupings(grouping)
+    }
+    </script>
+  </body>
+</html>

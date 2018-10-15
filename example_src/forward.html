@@ -1,0 +1,74 @@
+<style media="screen">
+  .groupBy-div:only-child .groupBy-remove{
+    display: none;
+  }
+  .boxplot .infotext{
+    opacity: 0;
+  }
+  .boxplot:hover .infotext{
+    opacity: 1;
+  }
+</style>
+
+<div class="container-fluid">
+<form id="searchParams" class="form-inline row" style="padding:10px;">
+  <div class="form-group col-sm-2">
+    <label for="endpoint">germplasmDbIds</label>
+    <input type="text" class="form-control" name="germplasmDbIds" value="">
+  </div>
+
+  <div class="form-group col-sm-2">
+    <label for="endpoint">observationVariableDbIds</label>
+    <input type="text" class="form-control" name="observationVariableDbIds" value="">
+  </div>
+
+  <div class="form-group col-sm-2">
+    <label for="endpoint">studyDbIds</label>
+    <input type="text" class="form-control" name="studyDbIds" value="313, 361, 312, 357">
+  </div>
+
+  <div class="form-group col-sm-2">
+    <label for="endpoint">locationDbIds</label>
+    <input type="text" class="form-control" name="locationDbIds" value="">
+  </div>
+
+  <div class="form-group col-sm-2">
+    <label for="endpoint">trialDbIds</label>
+    <input type="text" class="form-control" name="trialDbIds" value="">
+  </div>
+
+  <div class="form-group col-sm-2">
+    <label for="endpoint">programDbIds</label>
+    <input type="text" class="form-control" name="programDbIds" value="">
+  </div>
+
+  <div class="form-group col-sm-2">
+    <label for="endpoint">seasonDbIds</label>
+    <input type="text" class="form-control" name="seasonDbIds" value="">
+  </div>
+
+  <div class="col-sm-12">
+    <a id="searchParams-submit" class="btn btn-default">Get Values</a>
+  </div>
+</form>
+
+<div class="row">
+  <div class="groupBy-div form-inline col-sm-12 form-group">
+    <label for="sort" class="control-label">Variable</label>
+    <select id="variableSelect" class="form-control"></select>
+  </div>
+</div>
+
+<div id="groupBys" hidden class="row">
+  <div class="groupBy-div form-inline col-sm-12 form-group">
+    <label for="sort" class="control-label"> Display By </label>
+    <select class="form-control groupBy">
+      <option value="" selected></option>
+    </select>
+    <a class="btn btn-default groupBy-add">+</a>
+    <a class="btn btn-default groupBy-remove">-</a>
+  </div>
+</div>
+
+
+</div>

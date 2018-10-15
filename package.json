@@ -1,0 +1,41 @@
+{
+  "name": "BrAPI-BoxPlotter",
+  "version": "0.0.0",
+  "description": "Tool for viewing physical observations study layout and assayed traits.",
+  "main": "index.js",
+  "dependencies": {
+    "npm": "^6.4.0",
+    "rollup": "^0.66.2"
+  },
+  "peerDependencies": {
+    "@solgenomics/brapijs": "solgenomics/brapi-js#develop",
+    "d3": "^5.7.0"
+  },
+  "devDependencies": {
+    "@solgenomics/brapijs": "solgenomics/brapi-js#develop",
+    "@solgenomics/brapp-wrapper": "^1.1.0",
+    "d3": "^5.7.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/solgenomics/BrAPI-BoxPlotter.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/solgenomics/BrAPI-BoxPlotter/issues"
+  },
+  "scripts": {
+    "prepare": "mkdir -p dist && rollup -c",
+    "copy_example_files": "rm -r docs/example_files; mkdir -p docs/example_files && cp dist/* node_modules/@solgenomics/brapijs/build/BrAPI.js node_modules/d3/dist/d3.js docs/example_files",
+    "prepublishOnly": "npm run copy_example_files && wrapbrapp"
+  },
+  "brapp": {
+    "out": "docs/example.html",
+    "name": "Phenotype BoxPlotter",
+    "link": "https://github.com/solgenomics/BrAPI-BoxPlotter",
+    "forward": "example_src/forward.html",
+    "main": "example_src/main.html",
+    "scripts": "example_src/scripts.html"
+  }
+}
