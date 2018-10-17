@@ -83,7 +83,7 @@
 </script> <script src="example_files/BrAPI.js">
 </script> <script src="example_files/BrAPIBoxPlotter.js">
 </script> <script type="text/javascript">
-var boxplot;
+var boxplot = BrAPIBoxPlotter("#bxplt");
     d3.select("#searchParams-submit").on("click",function(){
     var searchParams = {};
     d3.select("#searchParams").selectAll("[name]").each(function(){
@@ -94,13 +94,10 @@ var boxplot;
       } 
     })
     searchParams.pageSize = 1000;
-    boxplot = BrAPIBoxPlotter(
-      BrAPI(
-        "https://cassavabase.org/brapi/v1",
-        "v1.2", null, 5
-      ).phenotypes_search(searchParams),
-      "#bxplt"
-    );
+    boxplot.setData(BrAPI(
+      "https://cassavabase.org/brapi/v1",
+      "v1.2", null, 5
+    ).phenotypes_search(searchParams));
     d3.select("#groupBys").attr("hidden",null);
     drawGroupBys();
     drawVariableSelect();
@@ -113,6 +110,7 @@ var boxplot;
       var allVars = vars.enter().append("option")
         .merge(vars)
         .attr("value",d=>d.key)
+        .attr("selected",d=>d.key==boxplot.variable?"":null)
         .text(d=>d.value);
     });
     d3.select("#variableSelect").on("change",function(){

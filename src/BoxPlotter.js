@@ -1,7 +1,3 @@
-export default function boxPlotter(){
-  return new BoxPlotter(...arguments);
-};
-
 /**
  * [BoxPlotter description]
  */
@@ -10,9 +6,11 @@ class BoxPlotter {
    * [constructor description]
    * @param {Array|BrAPINode} phenotypes
    */
-  constructor(phenotypes, container) {
-    this.grouping = null;
+  constructor(container) {
     this.container = d3.select(container);
+    this.data = Promise.resolve({});
+  }
+  setData(phenotypes){
     this.data = new Promise((resolve,reject)=>{
       if(phenotypes.forEach){
         resolve({raw:phenotypes})
@@ -38,8 +36,11 @@ class BoxPlotter {
         return obs.concat(ou.observations);
       },[])
       return d;
-    })
-    this.setGroupings([]);
+    });
+    this.getVariables().then(vs=>{
+      if(!this.variable ||!vs.some(v=>v.key==this.variable)) this.setVariable(vs[0].key)
+    });
+    this.setGroupings(this.groupings||[]);
   }
   getGroupings(){
     return Promise.resolve(d3.entries(BoxPlotter.groupAccessors));
@@ -195,6 +196,7 @@ class BoxPlotter {
     })
   }
   setGroupings(groupings){
+    this.groupings = groupings;
     this.data = this.data.then(d=>{
       d.keyFunc = ()=>"";
       d.labelFunc = ()=>"";
@@ -273,3 +275,7 @@ BoxPlotter.groupAccessors = {
     value:(o)=>o.collector
   }
 }
+
+export default function boxPlotter(){
+  return new BoxPlotter(...arguments);
+};
