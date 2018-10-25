@@ -10,6 +10,7 @@ export default {
       '@turf/turf':'turf',
       '@solgenomics/brapijs':'BrAPI',
       'leaflet':'L',
-    }
+    },
+    sourcemap: true
   }
 };

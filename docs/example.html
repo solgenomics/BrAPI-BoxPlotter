@@ -70,7 +70,7 @@
     <div class="brapp-container" style="position:relative;">
       <div value="brapp-wrapper" style="display:inline-block; border:solid 1px #ccc;border-radius:4px;">
         <div class="brapp-body" style="background-color:#fff;border-top-left-radius:4px;border-top-right-radius:4px;">
-          <div id="bxplt" style="width: 960px;"></div>
+          <div id="bxplt" style="max-width: 960px; overflow-x:auto;"></div>
           <div style="clear:both"></div>
         </div>
         <div class="brapp-footer" style="background-color:#ddd;border-top:solid 1px #ccc;font-family:Arial;color:#555;font-size:11px;padding:0.3em;border-bottom-left-radius:4px;border-bottom-right-radius:4px;">
@@ -79,11 +79,25 @@
           </div>
         </div>
       </div>
-    </div><script src="example_files/d3.js">
+    </div><a id="download" download="" class="btn btn-default">Download</a> <script src="example_files/d3.js">
 </script> <script src="example_files/BrAPI.js">
 </script> <script src="example_files/BrAPIBoxPlotter.js">
 </script> <script type="text/javascript">
 var boxplot = BrAPIBoxPlotter("#bxplt");
+    d3.select("#download").on("mouseover",function(){
+    var svg = d3.select("#bxplt").select("svg.boxplots").node();
+    var serializer = new XMLSerializer();
+    var source = serializer.serializeToString(svg);
+    if(!source.match(/^<svg[^>]+xmlns="http\:\/\/www\.w3\.org\/2000\/svg"/)){
+      source = source.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
+    }
+    if(!source.match(/^<svg[^>]+"http\:\/\/www\.w3\.org\/1999\/xlink"/)){
+      source = source.replace(/^<svg/, '<svg xmlns:xlink="http://www.w3.org/1999/xlink"');
+    }
+    source = '<?xml version="1.0" standalone="no"?>\r\n' + source;
+    var url = "data:image/svg+xml;charset=utf-8,"+encodeURIComponent(source);
+    this.href = url;
+    });
     d3.select("#searchParams-submit").on("click",function(){
     var searchParams = {};
     d3.select("#searchParams").selectAll("[name]").each(function(){

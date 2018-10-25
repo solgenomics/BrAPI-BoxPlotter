@@ -56,170 +56,242 @@ class BoxPlotter {
     else return out
   }
   setVariable(variable){
-    this.variable = variable;
+    this.variable = [variable];
     this.draw();
   }
   draw(){
     var plt = {
-      w:100,
-      bw:30,
-      h:300,
+      vm:30,
+      w:400,
+      bh:20,
+      h:55,
       ts:10,
       scale:d3.scaleLinear(),
       f: d3.format(".3g")
     };
-    plt.scale.range([plt.h-10,30]);
-    plt.axis = d3.axisLeft(plt.scale);
+    plt.scale.range([30,plt.w-10]);
+    plt.axis = d3.axisTop(plt.scale);
     
     this.data.then(d=>{
       if(!this.variable) return;
-      this.container.selectAll(".axis").data([0]).enter().append("svg")
-        .classed("axis",true)
-        .attr("width",30)
-        .attr("height",plt.h)
-        .append("g")
-        .attr("transform","translate(28,0)");
-      this.container.selectAll(".axis").lower().select("g").call(plt.axis);
-      var boxplots = this.container.selectAll(".boxplot").data(
-        d.groups.map(g=>{
-          var datum = {obs:g.value[this.variable]}
-          return datum
-        }).filter(g=>!!g.obs && g.obs.length>=3)
-          .map(g=>{
-            g.label = d.labelFunc(g.obs[0]);
-            g.q1 = d3.quantile(g.obs, 0.25, o=>o.value);
-            g.q2 = d3.quantile(g.obs, 0.5, o=>o.value);
-            g.q3 = d3.quantile(g.obs, 0.75, o=>o.value);
-            g.max = g.q3+1.5*(g.q3-g.q1);
-            g.min = g.q1-1.5*(g.q3-g.q1);
-            plt.scale.domain(d3.extent(plt.scale.domain().concat([
-              g.min,g.max,g.q1,g.q2,g.q3,
-              d3.min(g.obs,o=>o.value),
-              d3.max(g.obs,o=>o.value)
-            ])));
-            console.log(g);
-            return g;
-          })
-      );
-      boxplots.exit().remove();
-      console.log(plt.scale.domain(),this.variable,d);
-      var newBoxplots = boxplots.enter().append("svg")
-        .classed("boxplot",true)
-        .attr("width",plt.w+"px").attr("height",plt.h+"px");
-      newBoxplots.append("g").classed("label",true).append("text")
-        .attr("y",20).attr("text-anchor","middle");
-      newBoxplots.append("rect").classed("iqr",true)
+      var curSvg = this.container.selectAll("svg.boxplots").data([{
+        label:null,values:d.groups
+      }]);
+      var newSvg = curSvg.enter().append("svg").classed("boxplots",true);
+      newSvg.append("g").classed("axis",true);
+      newSvg.append("g").classed("groups",true);
+      var svg = newSvg.merge(curSvg);
+      
+      var groups = svg.select("g.groups");
+      groups.attr("transform","translate(0,"+plt.vm+")")
+      var variableGroups = null;
+      var grouplevel = 0;
+      while(true){
+        groups.each(g=>{
+          if(g.values[0].variable) variableGroups = groups;
+        });
+        if(variableGroups) break;
+        groups.selectAll(function(){
+            return this.childNodes;
+          }).filter(".boxplot").remove();
+        var curSubgroups = groups.selectAll(function(){
+            return this.childNodes;
+          }).filter(".plot-group").data(g=>{
+            return g.values
+        });
+        curSubgroups.exit().remove();
+        var newSubgroups = curSubgroups.enter().append("g")
+          .classed("plot-group",true);
+        var ginfo = newSubgroups.append("g").classed("group-info",true);
+        ginfo.append("text");
+        ginfo.append("path").attr("stroke","#444").attr("fill","none");
+        newSubgroups.append("g").classed("plot-group_contents",true);
+        groups = newSubgroups.merge(curSubgroups).select(".plot-group_contents");
+        groups.each(g=>g.level=grouplevel);
+        grouplevel+=1;
+      }
+      variableGroups.selectAll(".plot-group").remove();
+      var curBP = variableGroups.selectAll(".boxplot").data(d=>{
+          return d.values.filter(v=>this.variable.indexOf(v.key)!=-1)
+            .map(v=>{
+              v.q1 = d3.quantile(v.value, 0.25, o=>o.value);
+              v.q2 = d3.quantile(v.value, 0.5, o=>o.value);
+              v.q3 = d3.quantile(v.value, 0.75, o=>o.value);
+              v.max = v.q3+1.5*(v.q3-v.q1);
+              v.min = v.q1-1.5*(v.q3-v.q1);
+              plt.scale.domain(d3.extent(plt.scale.domain().concat([
+                v.min,v.max,v.q1,v.q2,v.q3,
+                d3.min(v.value,o=>o.value),
+                d3.max(v.value,o=>o.value)
+              ])));
+              return v;
+            });
+        });
+      plt.scale.nice();
+      curBP.exit().remove();
+      var newBP = curBP.enter().append("g").classed("boxplot",true);
+      newBP.append("rect").classed("iqr",true)
         .attr("fill","steelblue")
-        .attr("x",plt.w/2-(plt.bw/2)).attr("width",plt.bw);
-      newBoxplots.append("text").classed("mintext",true).classed("infotext",true)
+        .attr("y",plt.h/2-(plt.bh/2)).attr("height",plt.bh);
+      newBP.append("text").classed("mintext",true).classed("infotext",true)
         .attr("font-size",plt.ts)
-        .attr("text-anchor","end")
-        .attr("alignment-baseline","middle")
-        .attr("x",plt.w/2-(plt.bw/4+5));
-      newBoxplots.append("text").classed("maxtext",true).classed("infotext",true)
+        .attr("text-anchor","middle")
+        .attr("y",plt.h/2-(plt.bh/4+5));
+      newBP.append("text").classed("maxtext",true).classed("infotext",true)
         .attr("font-size",plt.ts)
-        .attr("text-anchor","end")
-        .attr("alignment-baseline","middle")
-        .attr("x",plt.w/2-(plt.bw/4+5));
-      newBoxplots.append("text").classed("q2text",true).classed("infotext",true)
+        .attr("text-anchor","middle")
+        .attr("y",plt.h/2-(plt.bh/4+5));
+      newBP.append("text").classed("q2text",true).classed("infotext",true)
         .attr("font-size",plt.ts)
-        .attr("alignment-baseline","middle")
-        .attr("text-anchor","end")
-        .attr("x",plt.w/2-(plt.bw/2+5));
-      newBoxplots.append("text").classed("q1text",true).classed("infotext",true)
+        .attr("text-anchor","middle")
+        .attr("y",plt.h/2-(plt.bh/2+5));
+      newBP.append("text").classed("q1text",true).classed("infotext",true)
         .attr("font-size",plt.ts)
-        .attr("alignment-baseline","middle")
-        .attr("x",plt.w/2+(plt.bw/2+5));
-      newBoxplots.append("text").classed("q3text",true).classed("infotext",true)
+        .attr("text-anchor","middle")
+        .attr("alignment-baseline","hanging")
+        .attr("y",plt.h/2+(plt.bh/2+3));
+      newBP.append("text").classed("q3text",true).classed("infotext",true)
         .attr("font-size",plt.ts)
-        .attr("alignment-baseline","middle")
-        .attr("x",plt.w/2+(plt.bw/2+5));
-      newBoxplots.append("path").classed("minend",true).attr("stroke","#444").attr("stroke-width","1");
-      newBoxplots.append("path").classed("maxend",true).attr("stroke","#444").attr("stroke-width","1");
-      newBoxplots.append("path").classed("minwhisk",true).attr("stroke","#444").attr("stroke-width","1");
-      newBoxplots.append("path").classed("maxwhisk",true).attr("stroke","#444").attr("stroke-width","1");
-      var newQ2 = newBoxplots.append("g").classed("q2",true);
+        .attr("text-anchor","middle")
+        .attr("alignment-baseline","hanging")
+        .attr("y",plt.h/2+(plt.bh/2+3));
+      newBP.append("path").classed("minend",true).attr("stroke","#444").attr("stroke-width","1");
+      newBP.append("path").classed("maxend",true).attr("stroke","#444").attr("stroke-width","1");
+      newBP.append("path").classed("minwhisk",true).attr("stroke","#444").attr("stroke-width","1");
+      newBP.append("path").classed("maxwhisk",true).attr("stroke","#444").attr("stroke-width","1");
+      var newQ2 = newBP.append("g").classed("q2",true);
       newQ2.append("rect").attr("fill","#444")
-        .attr("x",plt.w/2-(plt.bw/2)).attr("width",plt.bw).attr("height",2);
+        .attr("y",plt.h/2-(plt.bh/2)).attr("height",plt.bh).attr("width",2);
       newQ2.append("circle").attr("fill","#444")
         .attr("stroke","white")
-        .attr("cx",plt.w/2).attr("cy",1).attr("r",4);
-      var allBoxplots = boxplots.merge(newBoxplots);
-      allBoxplots.select(".label text").text(g=>g.label);
-      allBoxplots.select(".label").attr("transform",function(){
+        .attr("cy",plt.h/2).attr("cx",1).attr("r",4);
+      var allBP = curBP.merge(newBP);
+      allBP.select(".label text").text(v=>v.label);
+      allBP.select(".label").attr("transform",function(){
         var w = this.getBBox().width;
         var scale = plt.w/(w+20);
         scale = 1/scale>1?scale:1;
         return `scale(${scale})translate(${plt.w/2/scale})`
       });
-      // allBoxplots.select(".axis").call(plt.axis)
-      //   .attr("transform", function(){
-      //     return "translate("+(10+this.getBBox().width)+",0)"
-      //   });
-      allBoxplots.select(".q2")
-        .attr("transform",g=>`translate(0,${plt.scale(g.q2)-1})`)
-      allBoxplots.select(".mintext").attr("y",g=>plt.scale(g.min)).text(g=>{
-        return plt.scale(g.min)-plt.scale(g.q2)>plt.ts?plt.f(g.min):"";
-      });
-      allBoxplots.select(".maxtext").attr("y",g=>plt.scale(g.max)).text(g=>{
-        return plt.scale(g.q2)-plt.scale(g.max)>plt.ts?plt.f(g.max):"";
-      });
-      allBoxplots.select(".q2text").attr("y",g=>plt.scale(g.q2)).text(g=>{
-        return plt.f(g.q2)
-      });
-      allBoxplots.select(".q1text").attr("y",g=>plt.scale(g.q1)).text(g=>{
-        return plt.scale(g.q1)-plt.scale(g.q3)>plt.ts?plt.f(g.q1):"";
-      });
-      allBoxplots.select(".q3text").attr("y",g=>plt.scale(g.q3)).text(g=>{
-        return plt.scale(g.q1)-plt.scale(g.q3)>plt.ts?plt.f(g.q3):"";
-      });
-      allBoxplots.select(".minend")
-        .attr("d",g=>`M${plt.w/2-(plt.bw/4)} ${plt.scale(g.min)} h${plt.bw/2}`);
-      allBoxplots.select(".maxend")
-        .attr("d",g=>`M${plt.w/2-(plt.bw/4)} ${plt.scale(g.max)} h${plt.bw/2}`);
-      allBoxplots.select(".minwhisk")
-        .attr("d",g=>`M${plt.w/2} ${plt.scale(g.min)} V${plt.scale(g.q1)}`);
-      allBoxplots.select(".maxwhisk")
-        .attr("d",g=>`M${plt.w/2} ${plt.scale(g.max)} V${plt.scale(g.q3)}`);
-      allBoxplots.select(".iqr")
-        .attr("y",g=>plt.scale(g.q3))
-        .attr("height",g=>plt.scale(g.q1)-plt.scale(g.q3));
-      var outliers = allBoxplots.selectAll(".outlier").data(
-        g=>g.obs.filter(o=>o.value>g.max||o.value<g.min)
+      allBP.select(".q2")
+        .attr("transform",v=>`translate(${plt.scale(v.q2)-1},0)`)
+      allBP.select(".mintext").attr("x",v=>plt.scale(v.min)).text(v=>plt.f(v.min))
+        .attr("visibility",function(v){
+          return this.getBBox().width<(plt.scale(v.q2)-plt.scale(v.min))?null:"hidden";
+        });
+      allBP.select(".maxtext").attr("x",v=>plt.scale(v.max)).text(v=>plt.f(v.max))
+        .attr("visibility",function(v){
+          return this.getBBox().width<(plt.scale(v.max)-plt.scale(v.q2))?null:"hidden";
+        });
+      allBP.select(".q2text").attr("x",v=>plt.scale(v.q2)).text(v=>plt.f(v.q2));
+      allBP.select(".q1text").attr("x",v=>plt.scale(v.q1)).text(v=>plt.f(v.q1))
+        .attr("visibility",function(v){
+          return this.getBBox().width<(plt.scale(v.q3)-plt.scale(v.q1))?null:"hidden";
+        });
+      allBP.select(".q3text").attr("x",v=>plt.scale(v.q3)).text(v=>plt.f(v.q3))
+        .attr("visibility",function(v){
+          return this.getBBox().width<(plt.scale(v.q3)-plt.scale(v.q1))?null:"hidden";
+        });
+      allBP.select(".minend")
+        .attr("d",v=>`M${plt.scale(v.min)} ${plt.h/2-(plt.bh/4)} v${plt.bh/2}`);
+      allBP.select(".maxend")
+        .attr("d",v=>`M${plt.scale(v.max)} ${plt.h/2-(plt.bh/4)} v${plt.bh/2}`);
+      allBP.select(".minwhisk")
+        .attr("d",v=>`M${plt.scale(v.min)} ${plt.h/2} H${plt.scale(v.q1)}`);
+      allBP.select(".maxwhisk")
+        .attr("d",v=>`M${plt.scale(v.max)} ${plt.h/2} H${plt.scale(v.q3)}`);
+      allBP.select(".iqr")
+        .attr("x",v=>plt.scale(v.q1))
+        .attr("width",v=>plt.scale(v.q3)-plt.scale(v.q1));
+      var outliers = allBP.selectAll(".outlier").data(
+        v=>v.value.filter(o=>o.value>v.max||o.value<v.min)
       );
       outliers.exit().remove();
       outliers.enter().append("circle").classed("outlier",true)
         .attr("fill","none").attr("stroke","#444")
-        .attr("r",4).attr("cx",plt.w/2)
+        .attr("r",4).attr("cy",plt.h/2)
         .merge(outliers)
-        .attr("cy",o=>plt.scale(o.value));
+        .attr("cx",o=>plt.scale(o.value));
+      
+      svg.selectAll(".boxplot").attr("transform",(v,i)=>"translate(0,"+(plt.h*i)+")");
+      var plotGroups = svg.selectAll(".plot-group");
+      plotGroups.select(".group-info").select("text").text("");
+      plotGroups.nodes().reverse().forEach(plotGroupsNode=>{
+        var thisPG = d3.select(plotGroupsNode)
+        var bboxs = thisPG.selectAll(".plot-group_contents")
+          .nodes().map(n=>n.getBBox());
+        var bbox = bboxs.slice(1).reduce((tot,box)=>{
+          var x = d3.extent([tot.x,box.x,tot.x+tot.width,box.x+box.width]);
+          var y = d3.extent([tot.y,box.y,tot.y+tot.height,box.y+box.height]);
+          return {x:x[0],y:y[0],width:x[1]-x[0],height:y[1]-y[0]};
+        },bboxs[0]) || {x:0,y:0,width:0,height:0};
+        console.log(plotGroupsNode,bbox);
+        if(bbox.height<1) return d3.select(plotGroupsNode).remove();
+        thisPG.select(".group-info")
+          .select("text")
+          .attr("x",g=>Math.max(plt.w,bbox.x+bbox.width))
+          .attr("y",g=>bbox.y+(bbox.height/2))
+          .text(g=>"\u00A0"+g.label+"\u00A0")
+          .attr("transform",function(g){
+            var bbox = this.getBBox();
+            var factor = bbox.width/bbox.width < 1 ? bbox.width/bbox.width : 1;
+            console.log(this.x);
+            return `translate(${-d3.select(this).attr("x")*(factor-1)}, ${-d3.select(this).attr("y")*(factor-1)})
+            scale(${factor})`
+          });
+        thisPG.select(".group-info").select("path")
+          .attr("d",function(g){
+            return `
+            M ${Math.max(plt.w,bbox.x+bbox.width)-8} ${bbox.y}
+            l 8 0
+            l 0 ${bbox.height}
+            l -8 0
+            `
+          });
+      })
+      
+      var svgbbox = svg.select("g.groups").node().getBBox();
+      svg.select("g.axis").attr("transform","translate(0,"+(plt.vm-5)+")").call(plt.axis);
+      svg.attr("width",svgbbox.width+svgbbox.x)
+      svg.attr("height",svgbbox.height+svgbbox.y+plt.vm*2)
     })
   }
   setGroupings(groupings){
     this.groupings = groupings;
+    var group_nest = d3.nest();
     this.data = this.data.then(d=>{
-      d.keyFunc = ()=>"";
-      d.labelFunc = ()=>"";
+      d.labelFunc = ()=>[];
       groupings.forEach(g=>{
         if(!g) return;
-        var lastKey = d.keyFunc;
+        group_nest = group_nest.key(BoxPlotter.groupAccessors[g].key);
         var lastLabel = d.labelFunc;
-        d.keyFunc = (o)=>{
-          var l = lastKey(o);
-          return (l!=""?l+", ":l)+BoxPlotter.groupAccessors[g].value(o);
-        };
         d.labelFunc = (o)=>{
           var l = lastLabel(o);
-          var label = BoxPlotter.groupAccessors[g].label||BoxPlotter.groupAccessors[g].value;
-          return (l!=""?l+", ":l)+label(o);
+          var label = BoxPlotter.groupAccessors[g].label||BoxPlotter.groupAccessors[g].key;
+          return l.concat([label(o)]);
         };
       })
-      var nestbyvar = d3.nest().key(o=>o.observationVariableDbId)
-        .rollup(g=>g.sort((a,b)=>d3.ascending(a.value, b.value)));
-      d.groups = d3.nest().key(d.keyFunc)
-        .rollup(obs=>nestbyvar.object(obs))
-        .entries(d.obs)
-        .sort((a,b)=>d3.ascending(a.key,b.key));
+      d.groups = group_nest.key(o=>o.observationVariableDbId)
+        .rollup(g=>g.sort((a,b)=>d3.ascending(a.value, b.value)))
+        .entries(d.obs);
+      function getSetLabels(groups){
+        if(groups.every(g=>!!g.value)){
+          // Variable Group
+          groups.forEach(g=>{
+            g.variable = true;
+            g.labels = d.labelFunc(g.value[0]).concat([g.value[0].observationVariableName]);
+            g.label = g.labels[g.labels.length-1];
+          });
+        }
+        else{
+          groups.forEach(g=>{
+            getSetLabels(g.values);
+            g.labels = g.values[0].labels.slice(0,-1);
+            g.label = g.labels[g.labels.length-1];
+          })
+        }
+      }
+      getSetLabels(d.groups);
       return d;
     });
     this.draw();
@@ -229,36 +301,36 @@ class BoxPlotter {
 BoxPlotter.groupAccessors = {
   study:{
     name:"Study",
-    value:(o)=>o._obsUnit.studyDbId,
+    key:(o)=>o._obsUnit.studyDbId,
     label:(o)=>o._obsUnit.studyName
   },
   studyLocation:{
     name:"Study Location",
-    value:(o)=>o._obsUnit.studyLocationDbId,
+    key:(o)=>o._obsUnit.studyLocationDbId,
     label:(o)=>o._obsUnit.studyLocation
   },
   block:{
     name:"Block",
-    value:(o)=>o._obsUnit.blockNumber,
+    key:(o)=>o._obsUnit.blockNumber,
     label:(o)=>"Block #"+o._obsUnit.blockNumber
   },
   replicate:{
     name:"Replicate",
-    value:(o)=>o._obsUnit.replicate,
+    key:(o)=>o._obsUnit.replicate,
     label:(o)=>"Replicate #"+o._obsUnit.replicate
   },
   program:{
     name:"Program",
-    value:(o)=>o._obsUnit.programName
+    key:(o)=>o._obsUnit.programName
   },
   germplasm:{
     name:"Germplasm",
-    value:(o)=>o._obsUnit.germplasmDbId,
+    key:(o)=>o._obsUnit.germplasmDbId,
     label:(o)=>o._obsUnit.germplasmName
   },
   treatment:{
     name:"Treatment",
-    value:(o)=>{
+    key:(o)=>{
       return (o._obsUnit.treatments||[]).reduce((v,t)=>{
         v+="Factor: \""+t.factor+"\". "
         v+="Modality: \""+t.modality+"\". "
@@ -268,11 +340,11 @@ BoxPlotter.groupAccessors = {
   },
   season:{
     name:"Season",
-    value:(o)=>o.season
+    key:(o)=>o.season
   },
   collector:{
     name:"Collector",
-    value:(o)=>o.collector
+    key:(o)=>o.collector
   }
 }
 
