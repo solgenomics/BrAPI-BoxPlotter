@@ -44,6 +44,7 @@
         return d;
       });
       this.getVariables().then(vs=>{
+        if(!vs) return;
         if(!this.variable ||!vs.some(v=>v.key==this.variable)) this.setVariable(vs[0].key);
       });
       this.setGroupings(this.groupings||[]);
