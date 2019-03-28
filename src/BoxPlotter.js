@@ -118,8 +118,8 @@ class BoxPlotter {
               v.q1 = d3.quantile(v.value, 0.25, o=>o.value);
               v.q2 = d3.quantile(v.value, 0.5, o=>o.value);
               v.q3 = d3.quantile(v.value, 0.75, o=>o.value);
-              v.max = v.q3+1.5*(v.q3-v.q1);
-              v.min = v.q1-1.5*(v.q3-v.q1);
+              v.max = d3.min([v.q3+1.5*(v.q3-v.q1),d3.max(v.value, o=>o.value)]);
+              v.min = d3.max([v.q1-1.5*(v.q3-v.q1),d3.min(v.value, o=>o.value)]);
               plt.scale.domain(d3.extent(plt.scale.domain().concat([
                 v.min,v.max,v.q1,v.q2,v.q3,
                 d3.min(v.value,o=>o.value),
@@ -226,7 +226,6 @@ class BoxPlotter {
           var y = d3.extent([tot.y,box.y,tot.y+tot.height,box.y+box.height]);
           return {x:x[0],y:y[0],width:x[1]-x[0],height:y[1]-y[0]};
         },bboxs[0]) || {x:0,y:0,width:0,height:0};
-        console.log(plotGroupsNode,bbox);
         if(bbox.height<1) return d3.select(plotGroupsNode).remove();
         thisPG.select(".group-info")
           .select("text")
@@ -236,7 +235,6 @@ class BoxPlotter {
           .attr("transform",function(g){
             var bbox = this.getBBox();
             var factor = bbox.width/bbox.width < 1 ? bbox.width/bbox.width : 1;
-            console.log(this.x);
             return `translate(${-d3.select(this).attr("x")*(factor-1)}, ${-d3.select(this).attr("y")*(factor-1)})
             scale(${factor})`
           });
@@ -253,7 +251,7 @@ class BoxPlotter {
       
       var svgbbox = svg.select("g.groups").node().getBBox();
       svg.select("g.axis").attr("transform","translate(0,"+(plt.vm-5)+")").call(plt.axis);
-      svg.attr("width",svgbbox.width+svgbbox.x)
+      svg.attr("width",svgbbox.width+svgbbox.x+30)
       svg.attr("height",svgbbox.height+svgbbox.y+plt.vm*2)
     })
   }
