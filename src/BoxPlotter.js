@@ -72,7 +72,7 @@ class BoxPlotter {
     };
     plt.scale.range([30,plt.w-10]);
     plt.axis = d3.axisTop(plt.scale);
-    
+
     this.data.then(d=>{
       if(!this.variable) return;
       var curSvg = this.container.selectAll("svg.boxplots").data([{
@@ -82,7 +82,7 @@ class BoxPlotter {
       newSvg.append("g").classed("axis",true);
       newSvg.append("g").classed("groups",true);
       var svg = newSvg.merge(curSvg);
-      
+
       var groups = svg.select("g.groups");
       groups.attr("transform","translate(0,"+plt.vm+")")
       var variableGroups = null;
@@ -213,7 +213,7 @@ class BoxPlotter {
         .attr("r",4).attr("cy",plt.h/2)
         .merge(outliers)
         .attr("cx",o=>plt.scale(o.value));
-      
+
       svg.selectAll(".boxplot").attr("transform",(v,i)=>"translate(0,"+(plt.h*i)+")");
       var plotGroups = svg.selectAll(".plot-group");
       plotGroups.select(".group-info").select("text").text("");
@@ -231,7 +231,7 @@ class BoxPlotter {
           .select("text")
           .attr("x",g=>Math.max(plt.w,bbox.x+bbox.width))
           .attr("y",g=>bbox.y+(bbox.height/2))
-          .text(g=>"\u00A0"+g.label+"\u00A0")
+          .text(g=>"\xa0"+g.label+"\xa0")
           .attr("transform",function(g){
             var bbox = this.getBBox();
             var factor = bbox.width/bbox.width < 1 ? bbox.width/bbox.width : 1;
@@ -248,7 +248,7 @@ class BoxPlotter {
             `
           });
       })
-      
+
       var svgbbox = svg.select("g.groups").node().getBBox();
       svg.select("g.axis").attr("transform","translate(0,"+(plt.vm-5)+")").call(plt.axis);
       svg.attr("width",svgbbox.width+svgbbox.x+30)
