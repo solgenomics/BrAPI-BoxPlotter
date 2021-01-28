@@ -231,7 +231,7 @@ class BoxPlotter {
           .select("text")
           .attr("x",g=>Math.max(plt.w,bbox.x+bbox.width))
           .attr("y",g=>bbox.y+(bbox.height/2))
-          .text(g=>"\xa0"+g.label+"\xa0")
+          .text(g=>String.fromCharCode(160)+g.label+String.fromCharCode(160))
           .attr("transform",function(g){
             var bbox = this.getBBox();
             var factor = bbox.width/bbox.width < 1 ? bbox.width/bbox.width : 1;
