@@ -305,18 +305,26 @@ BoxPlotter.groupAccessors = {
   },
   studyLocation:{
     name:"Study Location",
-    key:(o)=>o._obsUnit.studyLocationDbId,
-    label:(o)=>o._obsUnit.studyLocation
+    key:(o)=>o._obsUnit.locationDbId,
+    label:(o)=>o._obsUnit.locationName
   },
   block:{
     name:"Block",
-    key:(o)=>o._obsUnit.blockNumber,
-    label:(o)=>"Block #"+o._obsUnit.blockNumber
+    key:(o)=>{
+      return (o._obsUnit.observationUnitPosition.observationLevelRelationships ||[]).reduce((v,t)=>{
+        if (t.levelName == "block") { v="Block #\""+t.levelCode+"\". " }
+        return v;
+      },"");
+    },
   },
   replicate:{
     name:"Replicate",
-    key:(o)=>o._obsUnit.replicate,
-    label:(o)=>"Replicate #"+o._obsUnit.replicate
+    key:(o)=>{
+      return (o._obsUnit.observationUnitPosition.observationLevelRelationships ||[]).reduce((v,t)=>{
+        if (t.levelName == "replicate") { v="Replicate #\""+t.levelCode+"\". " }
+        return v;
+      },"");
+    },
   },
   program:{
     name:"Program",
@@ -339,7 +347,12 @@ BoxPlotter.groupAccessors = {
   },
   season:{
     name:"Season",
-    key:(o)=>o.season
+    key:(o)=>{
+      return (o._obsUnit.observations[0].season ||[]).reduce((v,t)=>{
+        v+="Year: \""+t.year+"\". "
+        return v;
+      },"");
+    }
   },
   collector:{
     name:"Collector",
