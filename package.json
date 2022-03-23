@@ -9,7 +9,7 @@
   },
   "peerDependencies": {
     "@solgenomics/brapijs": "solgenomics/brapi-js#develop",
-    "d3": "^5.7.0"
+    "d3": "^7.3.0"
   },
   "devDependencies": {
     "@solgenomics/brapijs": "solgenomics/brapi-js#develop",
