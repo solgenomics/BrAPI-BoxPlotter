@@ -9,11 +9,11 @@
     "jsprim": ">=1.4.2"
   },
   "peerDependencies": {
-    "brapi-js": "git+https://github.com/solgenomics/brapi-js.git",
+    "@solgenomics/brapi-js": "git+https://github.com/solgenomics/brapi-js.git",
     "d3": "^7.3.0"
   },
   "devDependencies": {
-    "brapi-js": "git+https://github.com/solgenomics/brapi-js.git",
+    "@solgenomics/brapi-js": "git+https://github.com/solgenomics/brapi-js.git",
     "@solgenomics/brapp-wrapper": "^1.1.0",
     "d3": "^7.3.0"
   },
