@@ -1,2 +1,3 @@
 import BrAPIBoxPlotter from "./src/BoxPlotter";
-export default BrAPIBoxPlotter;
+
+module.exports = BrAPIBoxPlotter;
