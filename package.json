@@ -1,20 +1,20 @@
 {
   "name": "BrAPI-BoxPlotter",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Tool for viewing physical observations study layout and assayed traits.",
   "main": "index.js",
   "dependencies": {
-    "npm": "^7.5.2",
-    "rollup": "^0.66.2",
+    "npm": ">=7.5.2",
+    "rollup": ">=0.66.2",
     "jsprim": ">=1.4.2"
   },
   "peerDependencies": {
-    "@solgenomics/brapijs": "solgenomics/brapi-js#develop",
+    "@solgenomics/brapijs": "git+https://github.com/solgenomics/brapi-js.git#update_brapi",
     "d3": "^7.3.0"
   },
   "devDependencies": {
-    "@solgenomics/brapijs": "solgenomics/brapi-js#develop",
-    "@solgenomics/brapp-wrapper": "^1.1.0",
+    "@solgenomics/brapijs": "git+https://github.com/solgenomics/brapi-js.git#update_brapi",
+    "@solgenomics/brapp-wrapper": "git+https://github.com/solgenomics/BrApp-Wrapper.git#update_brapi",
     "d3": "^7.3.0"
   },
   "repository": {
