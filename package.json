@@ -15,7 +15,7 @@
   },
   "devDependencies": {
     "@solgenomics/brapijs": "git+https://github.com/solgenomics/brapi-js.git#update_brapi",
-    "@solgenomics/brapp-wrapper": "^1.1.0",
+    "@solgenomics/brapp-wrapper": "git+https://github.com/solgenomics/BrApp-Wrapper.git#update_brapi",
     "d3": "^7.3.0"
   },
   "repository": {
