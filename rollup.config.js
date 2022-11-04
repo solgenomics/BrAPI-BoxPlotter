@@ -1,5 +1,5 @@
 // rollup.config.js
-export default {
+module.exports = {
   input: 'index',
   output: {
     file: 'dist/BrAPIBoxPlotter.js',
