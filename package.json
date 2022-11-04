@@ -3,7 +3,6 @@
   "version": "0.0.0",
   "description": "Tool for viewing physical observations study layout and assayed traits.",
   "main": "index.js",
-  "type": "module",
   "dependencies": {
     "npm": ">=7.5.2",
     "rollup": ">=0.66.2",
