@@ -1,6 +1,6 @@
 {
   "name": "BrAPI-BoxPlotter",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Tool for viewing physical observations study layout and assayed traits.",
   "main": "index.js",
   "dependencies": {
