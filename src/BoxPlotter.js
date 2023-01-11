@@ -252,13 +252,13 @@ class BoxPlotter {
       var svgbbox = svg.select("g.groups").node().getBBox();
       svg.select("g.axis").attr("transform","translate(0,"+(plt.vm-5)+")").call(plt.axis);
       svg.attr("width",svgbbox.width+svgbbox.x+30)
-      svg.attr("height",svgbbox.height+svgbbox.y+plt.vm*2)
+      svg.attr("height",svgbbox.height+svgbbox.y+plt.vm*4)
 
       svg.append("text")
-          .attr("transform", "translate(0," + (plt.vm - 5) + ")")
+          .attr("transform", "translate(250," + (plt.vm - 5) + ")")
           .style("text-anchor", "middle")
           .attr("fill", "black")
-          .text("Title");
+          .text(o.observationVariableName);
 
     })
   }
