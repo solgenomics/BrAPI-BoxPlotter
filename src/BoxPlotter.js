@@ -39,7 +39,7 @@ class BoxPlotter {
     });
     this.getVariables().then(vs=>{
       if(!vs) return;
-      if(!this.variable ||!vs.some(v=>v.key==this.variable)) this.setVariable(vs[0].key)
+      if(!this.variable ||!vs.some(v=>v.key==this.variable)) this.setVariable(vs[0].key, vs[0].label)
     });
     this.setGroupings(this.groupings||[]);
   }
@@ -56,8 +56,9 @@ class BoxPlotter {
     if(cb) return out.then(cb);
     else return out
   }
-  setVariable(variable){
-    this.variable = [variable];
+  setVariable(id,label){
+    this.variable = [id];
+    this.variableLabel = label;
     this.draw();
   }
   draw(){
@@ -258,7 +259,7 @@ class BoxPlotter {
           .attr("transform", "translate(250," + (plt.vm - 5) + ")")
           .style("text-anchor", "middle")
           .attr("fill", "black")
-          .text(o.observationVariableName);
+          .text(this.variableLabel);
 
     })
   }
