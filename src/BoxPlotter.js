@@ -346,13 +346,20 @@ BoxPlotter.groupAccessors = {
     }
   },
   season:{
-    name:"Season",
-    key:(o)=>{
-      return (o._obsUnit.observations[0].season ||[]).reduce((v,t)=>{
-        v+="Year: \""+t.year+"\". "
-        return v;
-      },"");
-    }
+      name:"Season",
+      key:(o)=>{
+          var seasons = o._obsUnit.seasons;
+          if(!seasons || !Array.isArray(seasons) || seasons.length === 0) return "";
+          return seasons.reduce((v,t)=>{
+              if(typeof t === "object" && t !== null){
+                  if(t.year) v += "Year: \""+t.year+"\". ";
+                  if(t.season) v += "Season: \""+t.season+"\". ";
+              } else if(typeof t === "string"){
+                  v += t + ". ";
+              }
+              return v;
+          },"");
+      }
   },
   collector:{
     name:"Collector",
